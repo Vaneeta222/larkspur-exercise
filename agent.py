@@ -9,15 +9,39 @@ Where you edit:   grep -n '✏' agent.py   (six marks, one per place)
 Steps and gates:  https://anthropicpartnerbasecamp.bts.com/
 """
 from __future__ import annotations
+import csv
+import json
+from pathlib import Path
 from typing import Any, Dict, List
 from support import (MODEL, SYSTEM_PROMPT, call_local, execute_tool, mcp_client,
                      new_session, next_available_day, record_tool_result,
                      runtime_preamble)
 
 MAX_TOOL_CALLS = 8  # Larkspur's own build capped the loop here; then a human takes over.
+DATA_DIR = Path(__file__).resolve().parent / "data" / "americas"
 
 TONE_ADDENDUM = ""                       # ✏️ Build 4, step 4.1, intelligence goal
 EXTRA_TOOLS: List[Dict[str, Any]] = [   # ✏️ Build 2, step 2.1: schemas for the tools you add
+    {
+        "name": "fare_rules",
+        "description": (
+            "Retrieve the Larkspur handbook text to explain a general fare or disruption "
+            "rule, such as why an overnight weather disruption does not qualify for a hotel. "
+            "Use this when the customer asks what the handbook says or why a rule applies. "
+            "This does not decide what a specific booking is owed; use check_policy for "
+            "that booking-specific decision."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "question": {
+                    "type": "string",
+                    "description": "The customer's question about the general handbook rule to explain.",
+                },
+            },
+            "required": ["question"],
+        },
+    },
     {
         "name": "next_available_day",
         "description": (
@@ -41,9 +65,71 @@ EXTRA_TOOLS: List[Dict[str, Any]] = [   # ✏️ Build 2, step 2.1: schemas for 
             "required": ["origin", "dest", "date"],
         },
     },
+    {
+        "name": "reopen_stats",
+        "description": (
+            "Look up how often disruptions with this cause code at this origin airport "
+            "have come back within 72 hours, based on past transcripts. Returns the reopen "
+            "rate (reopened / total, e.g. 0.4 for 40%) plus the raw counts behind it. Call "
+            "this before check_policy so a high reopen rate can inform the policy decision "
+            "(e.g. more goodwill, lower threshold to escalate) -- do not call it after."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "origin": {
+                    "type": "string",
+                    "description": "Origin airport code, e.g. DEN",
+                },
+                "cause_code": {
+                    "type": "string",
+                    "enum": ["WX", "ATC", "MX", "CREW", "SEC"],
+                },
+            },
+            "required": ["origin", "cause_code"],
+        },
+    },
 ]
+
+
+def fare_rules(question: str) -> str:
+    handbook = Path("data/americas/fare_rules_excerpt.md")
+    return handbook.read_text(encoding="utf-8")
+
+
+def reopen_stats(origin: str, cause_code: str) -> Dict[str, Any]:
+    """Count disruptions at an origin/cause that reopened within 72 hours."""
+    flight_origin = {}
+    with open(DATA_DIR / "flights.csv", encoding="utf-8", newline="") as fh:
+        for row in csv.DictReader(fh):
+            flight_origin[row["flight_no"]] = row["origin"]
+
+    total = 0
+    reopened = 0
+    with open(DATA_DIR / "transcripts_sample.jsonl", encoding="utf-8") as fh:
+        for line in fh:
+            record = json.loads(line)
+            disruption = record["disruption"]
+            if (flight_origin.get(disruption["flight_no"]) != origin
+                    or disruption["cause_code"] != cause_code):
+                continue
+            total += 1
+            if record.get("reopened_within_72h"):
+                reopened += 1
+
+    return {
+        "origin": origin,
+        "cause_code": cause_code,
+        "total": total,
+        "reopened": reopened,
+        "reopen_rate": round(reopened / total, 2) if total else 0.0,
+    }
+
+
 LOCAL_TOOLS: Dict[str, Any] = {          # ✏️ Build 2, step 2.1: the functions behind them
+    "fare_rules": fare_rules,
     "next_available_day": next_available_day,
+    "reopen_stats": reopen_stats,
 }
 
 
