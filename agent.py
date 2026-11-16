@@ -17,8 +17,34 @@ from support import (MODEL, SYSTEM_PROMPT, call_local, execute_tool, mcp_client,
 MAX_TOOL_CALLS = 8  # Larkspur's own build capped the loop here; then a human takes over.
 
 TONE_ADDENDUM = ""                       # ✏️ Build 4, step 4.1, intelligence goal
-EXTRA_TOOLS: List[Dict[str, Any]] = []   # ✏️ Build 2, step 2.1: schemas for the tools you add
-LOCAL_TOOLS: Dict[str, Any] = {}         # ✏️ Build 2, step 2.1: the functions behind them
+EXTRA_TOOLS: List[Dict[str, Any]] = [   # ✏️ Build 2, step 2.1: schemas for the tools you add
+    {
+        "name": "next_available_day",
+        "description": (
+            "Answer 'when is the first day I can fly?': returns the earliest date that "
+            "still has an open seat on a Larkspur flight between two airports, on or after "
+            "a given date. Use it when the customer asks about the soonest day they can "
+            "travel, or when search_alternatives found nothing suitable and you need to tell "
+            "them the first possible day. Take origin, dest and cabin from the segment "
+            "returned by lookup_booking; never guess them. Returns one date (YYYY-MM-DD), or "
+            "null if there is no open seat. It only gives the day: to offer specific flights, "
+            "use search_alternatives."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "origin": {"type": "string", "description": "Departure airport, 3-letter IATA code from the booking segment (e.g. DEN)."},
+                "dest": {"type": "string", "description": "Arrival airport, 3-letter IATA code from the booking segment (e.g. AUS)."},
+                "date": {"type": "string", "description": "First date to consider, YYYY-MM-DD, usually the original flight date from the booking segment."},
+                "cabin": {"type": "string", "enum": ["Y", "J"], "description": "Cabin from the booking segment: Y for economy, J for business. Defaults to Y."},
+            },
+            "required": ["origin", "dest", "date"],
+        },
+    },
+]
+LOCAL_TOOLS: Dict[str, Any] = {          # ✏️ Build 2, step 2.1: the functions behind them
+    "next_available_day": next_available_day,
+}
 
 
 def text_of(response) -> str:
