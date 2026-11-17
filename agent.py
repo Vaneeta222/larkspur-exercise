@@ -22,49 +22,49 @@ DATA_DIR = Path(__file__).resolve().parent / "data" / "americas"
 
 TONE_ADDENDUM = ""                       # ✏️ Build 4, step 4.1, intelligence goal
 EXTRA_TOOLS: List[Dict[str, Any]] = [   # ✏️ Build 2, step 2.1: schemas for the tools you add
-    {
-        "name": "fare_rules",
-        "description": (
-            "Retrieve the Larkspur handbook text to explain a general fare or disruption "
-            "rule, such as why an overnight weather disruption does not qualify for a hotel. "
-            "Use this when the customer asks what the handbook says or why a rule applies. "
-            "This does not decide what a specific booking is owed; use check_policy for "
-            "that booking-specific decision."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "question": {
-                    "type": "string",
-                    "description": "The customer's question about the general handbook rule to explain.",
-                },
-            },
-            "required": ["question"],
-        },
-    },
-    {
-        "name": "next_available_day",
-        "description": (
-            "Answer 'when is the first day I can fly?': returns the earliest date that "
-            "still has an open seat on a Larkspur flight between two airports, on or after "
-            "a given date. Use it when the customer asks about the soonest day they can "
-            "travel, or when search_alternatives found nothing suitable and you need to tell "
-            "them the first possible day. Take origin, dest and cabin from the segment "
-            "returned by lookup_booking; never guess them. Returns one date (YYYY-MM-DD), or "
-            "null if there is no open seat. It only gives the day: to offer specific flights, "
-            "use search_alternatives."
-        ),
-        "input_schema": {
-            "type": "object",
-            "properties": {
-                "origin": {"type": "string", "description": "Departure airport, 3-letter IATA code from the booking segment (e.g. DEN)."},
-                "dest": {"type": "string", "description": "Arrival airport, 3-letter IATA code from the booking segment (e.g. AUS)."},
-                "date": {"type": "string", "description": "First date to consider, YYYY-MM-DD, usually the original flight date from the booking segment."},
-                "cabin": {"type": "string", "enum": ["Y", "J"], "description": "Cabin from the booking segment: Y for economy, J for business. Defaults to Y."},
-            },
-            "required": ["origin", "dest", "date"],
-        },
-    },
+    # {
+    #     "name": "fare_rules",
+    #     "description": (
+    #         "Retrieve the Larkspur handbook text to explain a general fare or disruption "
+    #         "rule, such as why an overnight weather disruption does not qualify for a hotel. "
+    #         "Use this when the customer asks what the handbook says or why a rule applies. "
+    #         "This does not decide what a specific booking is owed; use check_policy for "
+    #         "that booking-specific decision."
+    #     ),
+    #     "input_schema": {
+    #         "type": "object",
+    #         "properties": {
+    #             "question": {
+    #                 "type": "string",
+    #                 "description": "The customer's question about the general handbook rule to explain.",
+    #             },
+    #         },
+    #         "required": ["question"],
+    #     },
+    # },
+    # {
+    #     "name": "next_available_day",
+    #     "description": (
+    #         "Answer 'when is the first day I can fly?': returns the earliest date that "
+    #         "still has an open seat on a Larkspur flight between two airports, on or after "
+    #         "a given date. Use it when the customer asks about the soonest day they can "
+    #         "travel, or when search_alternatives found nothing suitable and you need to tell "
+    #         "them the first possible day. Take origin, dest and cabin from the segment "
+    #         "returned by lookup_booking; never guess them. Returns one date (YYYY-MM-DD), or "
+    #         "null if there is no open seat. It only gives the day: to offer specific flights, "
+    #         "use search_alternatives."
+    #     ),
+    #     "input_schema": {
+    #         "type": "object",
+    #         "properties": {
+    #             "origin": {"type": "string", "description": "Departure airport, 3-letter IATA code from the booking segment (e.g. DEN)."},
+    #             "dest": {"type": "string", "description": "Arrival airport, 3-letter IATA code from the booking segment (e.g. AUS)."},
+    #             "date": {"type": "string", "description": "First date to consider, YYYY-MM-DD, usually the original flight date from the booking segment."},
+    #             "cabin": {"type": "string", "enum": ["Y", "J"], "description": "Cabin from the booking segment: Y for economy, J for business. Defaults to Y."},
+    #         },
+    #         "required": ["origin", "dest", "date"],
+    #     },
+    # },
     {
         "name": "reopen_stats",
         "description": (
@@ -127,8 +127,8 @@ def reopen_stats(origin: str, cause_code: str) -> Dict[str, Any]:
 
 
 LOCAL_TOOLS: Dict[str, Any] = {          # ✏️ Build 2, step 2.1: the functions behind them
-    "fare_rules": fare_rules,
-    "next_available_day": next_available_day,
+    # "fare_rules": fare_rules,
+    # "next_available_day": next_available_day,
     "reopen_stats": reopen_stats,
 }
 
@@ -195,7 +195,7 @@ def run_agent(pnr: str, last_name: str, message: str) -> str:            # ✏�
 def tool_list() -> List[Dict[str, Any]]:                   # ✏️ Build 2, step 2.2
     """Given. Exactly what Claude is offered on every turn; run.py --show-tools
     prints this list."""
-    return build_tools() + EXTRA_TOOLS
+    return build_tools() + EXTRA_TOOLS + mcp_client.tools()
 
 
 # ──────────────────────────────────────────────────────────────────────────────
