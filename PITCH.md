@@ -8,7 +8,7 @@ Number: Tools offered per API call rose from 9 to 12 after adding three tools, a
 Safety check: It does not finalize a rebooking without the customer's UI-issued confirmation token; confirm_rebooking requires it, and the K7PQ2M trace made no confirmation call.
 Next: Test whether reopen_stats improves escalation guidance across more disruption cases without changing policy entitlements.
 Still broken: The fixtures use May 2025 flights; in our November 2026 run, the agent treated the rebooking window as likely expired and asked if that old trip was intended.
-Lever: <cost | speed | intelligence>
+Lever: intelligence
 
 ## Priya asked
 

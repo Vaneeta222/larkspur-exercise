@@ -20,7 +20,14 @@ from support import (MODEL, SYSTEM_PROMPT, call_local, execute_tool, mcp_client,
 MAX_TOOL_CALLS = 8  # Larkspur's own build capped the loop here; then a human takes over.
 DATA_DIR = Path(__file__).resolve().parent / "data" / "americas"
 
-TONE_ADDENDUM = ""                       # ✏️ Build 4, step 4.1, intelligence goal
+TONE_ADDENDUM = """
+
+Difficult customers:
+- Insults or abuse: acknowledge the frustration once, briefly and calmly. Do not repeat the apology, do not match the tone, and do not lecture the customer about it.
+- Legal threats (a lawyer, suing, legal action) or threats to harm anyone: do not argue, do not give the usual rundown of entitlements, and do not point them to a refund. Say you are passing the case to a person, call escalate_to_human with the reason, and stop there.
+- Requests you cannot handle (groups, refunds, anything out of scope): call escalate_to_human and tell the customer it has been passed on. Never promise what the human team will do: do not say they will rebook, refund, compensate or keep a group together.
+- In every case, promise nothing that a tool result has not confirmed.
+"""                                      # ✏️ Build 4, step 4.1, intelligence goal
 EXTRA_TOOLS: List[Dict[str, Any]] = [   # ✏️ Build 2, step 2.1: schemas for the tools you add
     # {
     #     "name": "fare_rules",

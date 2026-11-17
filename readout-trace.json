@@ -14,11 +14,11 @@
   "streamed": false,
   "deltas_seen": 0,
   "tokens": {
-    "input": 27529,
-    "output": 1236,
+    "input": 29013,
+    "output": 1207,
     "cache_read": 0,
     "cache_write": 0
   },
   "cache_hit_ratio": null,
-  "elapsed": 15.0
+  "elapsed": 13.3
 }
